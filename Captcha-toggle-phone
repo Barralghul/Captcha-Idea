@@ -1,0 +1,514 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Check, X, RotateCcw, Globe, Smartphone, Monitor } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Language translations
+const translations = {
+  en: {
+    title: "CAPTCHA",
+    instruction: "Remember and select these numbers in order:",
+    selectionLabel: "Your selection:",
+    verify: "Verify",
+    reset: "Reset",
+    resetCaptcha: "Reset CAPTCHA",
+    success: "Verification successful!",
+    wrongNumber: "Wrong number, try again",
+    selectFour: "Please select 4 numbers",
+    language: "Language",
+    toggleMobile: "Switch to mobile mode",
+    toggleDesktop: "Switch to desktop mode",
+    hoverInstruction: "Hover over numbers to reveal them",
+    tapInstruction: "Tap numbers to reveal them one at a time"
+  },
+  zh: {
+    title: "验证码",
+    instruction: "记住并按顺序选择这些数字：",
+    selectionLabel: "您的选择：",
+    verify: "验证",
+    reset: "重置",
+    resetCaptcha: "重置验证码",
+    success: "验证成功！",
+    wrongNumber: "数字错误，请重试",
+    selectFour: "请选择4个数字",
+    language: "语言",
+    toggleMobile: "切换到移动模式",
+    toggleDesktop: "切换到桌面模式",
+    hoverInstruction: "将鼠标悬停在数字上以显示它们",
+    tapInstruction: "点击数字一次显示一个"
+  },
+  hi: {
+    title: "कैप्चा",
+    instruction: "इन संख्याओं को क्रम में याद रखें और चुनें:",
+    selectionLabel: "आपका चयन:",
+    verify: "सत्यापित करें",
+    reset: "रीसेट करें",
+    resetCaptcha: "कैप्चा रीसेट करें",
+    success: "सत्यापन सफल!",
+    wrongNumber: "गलत नंबर, पुनः प्रयास करें",
+    selectFour: "कृपया 4 नंबर चुनें",
+    language: "भाषा",
+    toggleMobile: "मोबाइल मोड पर स्विच करें",
+    toggleDesktop: "डेस्कटॉप मोड पर स्विच करें",
+    hoverInstruction: "संख्याओं पर होवर करें ताकि वे प्रकट हों",
+    tapInstruction: "एक समय में एक संख्या को प्रकट करने के लिए टैप करें"
+  },
+  es: {
+    title: "CAPTCHA",
+    instruction: "Recuerda y selecciona estos números en orden:",
+    selectionLabel: "Tu selección:",
+    verify: "Verificar",
+    reset: "Reiniciar",
+    resetCaptcha: "Reiniciar CAPTCHA",
+    success: "¡Verificación exitosa!",
+    wrongNumber: "Número incorrecto, inténtalo de nuevo",
+    selectFour: "Por favor selecciona 4 números",
+    language: "Idioma",
+    toggleMobile: "Cambiar a modo móvil",
+    toggleDesktop: "Cambiar a modo escritorio",
+    hoverInstruction: "Pasa el cursor sobre los números para revelarlos",
+    tapInstruction: "Toca los números para revelarlos uno a la vez"
+  },
+  fr: {
+    title: "CAPTCHA",
+    instruction: "Mémorisez et sélectionnez ces chiffres dans l'ordre :",
+    selectionLabel: "Votre sélection :",
+    verify: "Vérifier",
+    reset: "Réinitialiser",
+    resetCaptcha: "Réinitialiser le CAPTCHA",
+    success: "Vérification réussie !",
+    wrongNumber: "Mauvais numéro, réessayez",
+    selectFour: "Veuillez sélectionner 4 chiffres",
+    language: "Langue",
+    toggleMobile: "Passer en mode mobile",
+    toggleDesktop: "Passer en mode bureau",
+    hoverInstruction: "Survolez les chiffres pour les révéler",
+    tapInstruction: "Appuyez sur les chiffres pour les révéler un par un"
+  },
+  ar: {
+    title: "كابتشا",
+    instruction: "تذكر واختر هذه الأرقام بالترتيب:",
+    selectionLabel: "اختيارك:",
+    verify: "تحقق",
+    reset: "إعادة تعيين",
+    resetCaptcha: "إعادة تعيين الكابتشا",
+    success: "تم التحقق بنجاح!",
+    wrongNumber: "رقم خاطئ، حاول مرة أخرى",
+    selectFour: "يرجى اختيار 4 أرقام",
+    language: "اللغة",
+    toggleMobile: "التبديل إلى الوضع المحمول",
+    toggleDesktop: "التبديل إلى وضع سطح المكتب",
+    hoverInstruction: "مرر المؤشر فوق الأرقام للكشف عنها",
+    tapInstruction: "انقر على الأرقام للكشف عنها واحدة تلو الأخرى"
+  },
+  bn: {
+    title: "ক্যাপচা",
+    instruction: "এই সংখ্যাগুলি ক্রমানুসারে মনে রেখে নির্বাচন করুন:",
+    selectionLabel: "আপনার নির্বাচন:",
+    verify: "যাচাই করুন",
+    reset: "রিসেট করুন",
+    resetCaptcha: "ক্যাপচা রিসেট করুন",
+    success: "যাচাইকরণ সফল!",
+    wrongNumber: "ভুল নম্বর, আবার চেষ্টা করুন",
+    selectFour: "দয়া করে 4টি সংখ্যা নির্বাচন করুন",
+    language: "ভাষা",
+    toggleMobile: "মোবাইল মোডে স্যুইচ করুন",
+    toggleDesktop: "ডেস্কটপ মোডে স্যুইচ করুন",
+    hoverInstruction: "সংখ্যাগুলি প্রকাশ করতে হover করুন",
+    tapInstruction: "একবারে একটি সংখ্যা প্রকাশ করতে ট্যাপ করুন"
+  },
+  ru: {
+    title: "КАПЧА",
+    instruction: "Запомните и выберите эти цифры по порядку:",
+    selectionLabel: "Ваш выбор:",
+    verify: "Проверить",
+    reset: "Сбросить",
+    resetCaptcha: "Сбросить КАПЧУ",
+    success: "Проверка пройдена!",
+    wrongNumber: "Неправильный номер, попробуйте еще раз",
+    selectFour: "Пожалуйста, выберите 4 цифры",
+    language: "Язык",
+    toggleMobile: "Переключиться в мобильный режим",
+    toggleDesktop: "Переключиться в режим рабочего стола",
+    hoverInstruction: "Наведите курсор на цифры, чтобы открыть их",
+    tapInstruction: "Нажмите на цифры, чтобы открыть их по одной"
+  },
+  pt: {
+    title: "CAPTCHA",
+    instruction: "Lembre-se e selecione estes números em ordem:",
+    selectionLabel: "Sua seleção:",
+    verify: "Verificar",
+    reset: "Reiniciar",
+    resetCaptcha: "Reiniciar CAPTCHA",
+    success: "Verificação bem-sucedida!",
+    wrongNumber: "Número errado, tente novamente",
+    selectFour: "Por favor, selecione 4 números",
+    language: "Idioma",
+    toggleMobile: "Mudar para modo móvel",
+    toggleDesktop: "Mudar para modo desktop",
+    hoverInstruction: "Passe o mouse sobre os números para revelá-los",
+    tapInstruction: "Toque nos números para revelá-los um de cada vez"
+  },
+  id: {
+    title: "CAPTCHA",
+    instruction: "Ingat dan pilih angka-angka ini secara berurutan:",
+    selectionLabel: "Pilihan Anda:",
+    verify: "Verifikasi",
+    reset: "Atur Ulang",
+    resetCaptcha: "Atur Ulang CAPTCHA",
+    success: "Verifikasi berhasil!",
+    wrongNumber: "Angka salah, coba lagi",
+    selectFour: "Silakan pilih 4 angka",
+    language: "Bahasa",
+    toggleMobile: "Beralih ke mode seluler",
+    toggleDesktop: "Beralih ke mode desktop",
+    hoverInstruction: "Arahkan kursor ke angka untuk menampilkannya",
+    tapInstruction: "Ketuk angka untuk menampilkannya satu per satu"
+  },
+  ur: {
+    title: "کیپچا",
+    instruction: "ان نمبروں کو یاد رکھیں اور ترتیب کے مطابق منتخب کریں:",
+    selectionLabel: "آپ کا انتخاب:",
+    verify: "تصدیق کریں",
+    reset: "دوبارہ ترتیب دیں",
+    resetCaptcha: "کیپچا دوبارہ ترتیب دیں",
+    success: "تصدیق کامیاب!",
+    wrongNumber: "غلط نمبر، دوبارہ کوشش کریں",
+    selectFour: "براہ کرم 4 نمبر منتخب کریں",
+    language: "زبان",
+    toggleMobile: "موبائل وضع پر سوئچ کریں",
+    toggleDesktop: "ڈیسک ٹاپ وضع پر سوئچ کریں",
+    hoverInstruction: "نمبروں کو ظاہر کرنے کے لیے ان پر ہover کریں",
+    tapInstruction: "ایک بار میں ایک نمبر کو ظاہر کرنے کے لیے ٹیپ کریں"
+  }
+};
+
+// Top 10 languages by number of speakers
+const languages = [
+  { code: "en", name: "English" },
+  { code: "zh", name: "中文 (Chinese)" },
+  { code: "hi", name: "हिन्दी (Hindi)" },
+  { code: "es", name: "Español (Spanish)" },
+  { code: "fr", name: "Français (French)" },
+  { code: "ar", name: "العربية (Arabic)" },
+  { code: "bn", name: "বাংলা (Bengali)" },
+  { code: "ru", name: "Русский (Russian)" },
+  { code: "pt", name: "Português (Portuguese)" },
+  { code: "id", name: "Bahasa Indonesia (Indonesian)" },
+  { code: "ur", name: "اردو (Urdu)" }
+];
+
+export default function CaptchaLanguage() {
+  const [gridDisplayNumbers, setGridDisplayNumbers] = useState<number[]>([]);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [tappedIndex, setTappedIndex] = useState<number | null>(null);
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [targetSequence, setTargetSequence] = useState<number[]>([]);
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>("en");
+  const [isMobileMode, setIsMobileMode] = useState(false);
+  
+  const t = translations[language as keyof typeof translations] || translations.en;
+
+  // Initialize the grid with random numbers
+  const initializeGrid = () => {
+    // Create array of numbers 0-9 in random order for display
+    const displayNumbers = Array.from({ length: 10 }, (_, i) => i)
+      .sort(() => Math.random() - 0.5);
+    
+    // Create a different array for target sequence
+    const targetNumbers = Array.from({ length: 10 }, (_, i) => i)
+      .sort(() => Math.random() - 0.5);
+    
+    setGridDisplayNumbers(displayNumbers);
+    setSelectedNumbers([]);
+    setIsVerified(null);
+    setErrorMessage(null);
+    setHoveredIndex(null);
+    setTappedIndex(null);
+    
+    // Generate target sequence (first 4 numbers from target array)
+    setTargetSequence(targetNumbers.slice(0, 4));
+  };
+
+  // Handle mouse enter to reveal number (desktop mode)
+  const handleMouseEnter = (index: number) => {
+    if (!isMobileMode) {
+      setHoveredIndex(index);
+    }
+  };
+
+  // Handle mouse leave to hide number (desktop mode)
+  const handleMouseLeave = () => {
+    if (!isMobileMode) {
+      setHoveredIndex(null);
+    }
+  };
+
+  // Handle tap to reveal number (mobile mode)
+  const handleNumberTap = (index: number) => {
+    if (isMobileMode) {
+      // Only one number can be visible at a time
+      setTappedIndex(tappedIndex === index ? null : index);
+    }
+  };
+
+  // Handle click to select number
+  const handleNumberClick = (index: number) => {
+    const isVisible = isMobileMode ? tappedIndex === index : hoveredIndex === index;
+    
+    if (isVisible && selectedNumbers.length < 4 && isVerified === null) {
+      const clickedNumber = gridDisplayNumbers[index];
+      setSelectedNumbers([...selectedNumbers, clickedNumber]);
+      
+      // In mobile mode, hide the number after selection
+      if (isMobileMode) {
+        setTappedIndex(null);
+      }
+    }
+  };
+
+  // Validate the selected sequence
+  const validateSequence = () => {
+    // Check if we have 4 numbers selected
+    if (selectedNumbers.length !== 4) {
+      setErrorMessage(t.selectFour);
+      return;
+    }
+    
+    // Check if the sequence matches
+    const isCorrect = selectedNumbers.every((num, i) => num === targetSequence[i]);
+    
+    if (isCorrect) {
+      setIsVerified(true);
+      setErrorMessage(null);
+    } else {
+      setIsVerified(false);
+      setErrorMessage(t.wrongNumber);
+    }
+  };
+
+  // Reset the CAPTCHA
+  const handleReset = () => {
+    initializeGrid();
+  };
+
+  // Handle language change
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
+    // Reset CAPTCHA when language changes
+    setTimeout(initializeGrid, 100);
+  };
+
+  // Toggle between mobile and desktop mode
+  const toggleMode = () => {
+    setIsMobileMode(!isMobileMode);
+    setTappedIndex(null);
+    setHoveredIndex(null);
+  };
+
+  // Initialize on component mount
+  useEffect(() => {
+    initializeGrid();
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+      <Card className="w-full max-w-md shadow-2xl bg-gray-800 border-gray-700">
+        <CardHeader className="text-center pt-8 pb-4">
+          <div className="flex justify-between items-center mb-4">
+            {/* Mode Toggle - Left */}
+            <div>
+              <Button 
+                onClick={toggleMode}
+                variant="outline"
+                size="sm"
+                className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
+              >
+                {isMobileMode ? (
+                  <>
+                    <Monitor className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">{t.toggleDesktop}</span>
+                  </>
+                ) : (
+                  <>
+                    <Smartphone className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">{t.toggleMobile}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {/* Language Selector - Right */}
+            <div>
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white">
+                  <div className="flex items-center">
+                    <Globe className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder={t.language} />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                  {languages.map((lang) => (
+                    <SelectItem 
+                      key={lang.code} 
+                      value={lang.code}
+                      className="hover:bg-gray-700"
+                    >
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Title - Centered and clearly visible */}
+          <CardTitle className="text-3xl font-bold text-white">
+            {t.title}
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="space-y-6">
+            {/* Target Sequence */}
+            <div className="text-center">
+              <p className="text-gray-300 mb-4">
+                {t.instruction}
+              </p>
+              <div className="flex justify-center space-x-3">
+                {targetSequence.map((num, i) => (
+                  <div 
+                    key={i} 
+                    className="w-12 h-12 flex items-center justify-center bg-indigo-600 text-white rounded-lg text-xl font-bold shadow-lg"
+                  >
+                    {num}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Number Grid */}
+            <div className="grid grid-cols-5 gap-3">
+              {gridDisplayNumbers.map((_, index) => {
+                const isVisible = isMobileMode ? tappedIndex === index : hoveredIndex === index;
+                
+                return (
+                  <div
+                    key={index}
+                    className={`
+                      h-16 flex items-center justify-center rounded-lg border-2 cursor-pointer transition-all duration-200
+                      ${isVisible 
+                        ? 'bg-gray-700 border-indigo-500 shadow-md' 
+                        : 'bg-gray-800 border-gray-600'
+                      }
+                      ${selectedNumbers.length > index 
+                        ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-800' 
+                        : ''}
+                      ${isVerified !== null 
+                        ? 'opacity-70 cursor-not-allowed' 
+                        : ''}
+                    `}
+                    onMouseEnter={() => !isMobileMode && handleMouseEnter(index)}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isMobileMode) {
+                        handleNumberTap(index);
+                      }
+                      handleNumberClick(index);
+                    }}
+                  >
+                    {isVisible ? (
+                      <span className="text-2xl font-bold text-white">
+                        {gridDisplayNumbers[index]}
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">?</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Input Box with Asterisks */}
+            <div className="space-y-2">
+              <p className="text-gray-300 text-sm">{t.selectionLabel}</p>
+              <Input
+                type="text"
+                value={selectedNumbers.map(() => '*').join('')}
+                readOnly
+                className="text-2xl font-mono tracking-widest h-14 text-center bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+
+            {/* Mode Instructions */}
+            <div className="text-center text-sm text-gray-400">
+              {isMobileMode ? t.tapInstruction : t.hoverInstruction}
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-3 rounded-md bg-red-900/30 text-red-400 border border-red-800 flex items-center justify-center">
+                <X className="mr-2 h-5 w-5" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {isVerified === true && (
+              <div className="p-3 rounded-md bg-green-900/30 text-green-400 border border-green-800 flex items-center justify-center">
+                <Check className="mr-2 h-5 w-5" />
+                <span>{t.success}</span>
+              </div>
+            )}
+
+            {/* Reset Button (appears after verification or error) */}
+            {(isVerified !== null || errorMessage) && (
+              <div className="flex justify-center">
+                <Button 
+                  onClick={handleReset}
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  {t.resetCaptcha}
+                </Button>
+              </div>
+            )}
+
+            {/* Action Buttons (when not verified and no error) */}
+            {isVerified === null && !errorMessage && (
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={validateSequence} 
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {t.verify}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleReset}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  {t.reset}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
